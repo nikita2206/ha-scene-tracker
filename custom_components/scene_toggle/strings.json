@@ -3,19 +3,23 @@
     "step": {
       "user": {
         "title": "Scene Toggle Setup",
-        "description": "Select scenes to cycle through and configure options.",
+        "description": "Configure a scene toggle group. This will create three entities based on the name you provide: a sensor showing the current scene, and buttons to switch to the next/previous scene.",
         "data": {
+          "name": "Name",
           "scenes": "Scenes (in order)",
           "wrap_around": "Wrap around (cycle from last to first)"
         },
         "data_description": {
+          "name": "A short name for this scene group (e.g., \"living_room\" or \"office\"). Only lowercase letters, numbers, and underscores are allowed. This will create the following entities: sensor.scene_toggle_[name]_current_scene, button.scene_toggle_[name]_next_scene, button.scene_toggle_[name]_previous_scene.",
           "scenes": "Select scenes in the order you want to cycle through them."
         }
       }
     },
     "error": {
       "no_scenes": "No scenes available. Create at least one scene first.",
-      "min_scenes": "Select at least one scene."
+      "min_scenes": "Select at least one scene.",
+      "name_required": "Please enter a name for this scene group.",
+      "name_invalid": "Name can only contain lowercase letters, numbers, and underscores."
     },
     "abort": {
       "already_configured": "This scene set is already configured."

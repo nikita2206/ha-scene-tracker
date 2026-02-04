@@ -10,7 +10,7 @@
           "wrap_around": "Wrap around (cycle from last to first)"
         },
         "data_description": {
-          "name": "A short name for this scene group (e.g., \"living_room\" or \"office\"). Only lowercase letters, numbers, and underscores are allowed. This will create the following entities: `sensor.scene_toggle_{name}_current_scene`, `button.scene_toggle_{name}_next_scene`, `button.scene_toggle_{name}_previous_scene`.",
+          "name": "A short name for this scene group (e.g., \"living_room\" or \"office\"). Only lowercase letters, numbers, and underscores are allowed. This will create the following entities: sensor.scene_toggle_[name]_current_scene, button.scene_toggle_[name]_next_scene, button.scene_toggle_[name]_previous_scene.",
           "scenes": "Select scenes in the order you want to cycle through them."
         }
       }
