@@ -5,5 +5,7 @@
   "documentation": "https://github.com/nikita2206/ha-scene-tracker",
   "codeowners": ["@nikita2206"],
   "requirements": [],
-  "iot_class": "local_push"
+  "dependencies": ["homeassistant"],
+  "iot_class": "local_push",
+  "config_flow": true
 }

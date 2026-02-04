@@ -11,3 +11,18 @@ dist/
 .coverage
 .tox/
 coverage.xml
+uv.lock
+
+# Test config generated files (keep configuration.yaml)
+test_config/.storage/
+test_config/deps/
+test_config/home-assistant_v2.db
+test_config/home-assistant.log*
+test_config/.cloud/
+test_config/tts/
+test_config/.HA_VERSION
+test_config/.ha_run.lock
+test_config/blueprints/
+test_config/custom_components/
+test_config/scenes.yaml
+test_config/known_devices.yaml

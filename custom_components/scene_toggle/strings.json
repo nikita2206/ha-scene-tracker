@@ -1,0 +1,60 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Scene Toggle Setup",
+        "description": "Select scenes to cycle through and configure options.",
+        "data": {
+          "scenes": "Scenes (in order)",
+          "wrap_around": "Wrap around (cycle from last to first)"
+        },
+        "data_description": {
+          "scenes": "Select scenes in the order you want to cycle through them."
+        }
+      }
+    },
+    "error": {
+      "no_scenes": "No scenes available. Create at least one scene first.",
+      "min_scenes": "Select at least one scene."
+    },
+    "abort": {
+      "already_configured": "This scene set is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Scene Toggle Options",
+        "data": {
+          "scenes": "Scenes (in order)",
+          "wrap_around": "Wrap around (cycle from last to first)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_scene": {
+        "name": "Current scene"
+      }
+    },
+    "button": {
+      "next_scene": {
+        "name": "Next scene"
+      },
+      "previous_scene": {
+        "name": "Previous scene"
+      }
+    }
+  },
+  "services": {
+    "next_scene": {
+      "name": "Next scene",
+      "description": "Activate the next scene in the configured list."
+    },
+    "previous_scene": {
+      "name": "Previous scene",
+      "description": "Activate the previous scene in the configured list."
+    }
+  }
+}
