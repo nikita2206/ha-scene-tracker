@@ -401,20 +401,8 @@ def create_scene_toggle_config_entry(token: str) -> str | None:
     """
     print_step("Creating scene_toggle config entry")
 
-    # First, check what scenes are available
-    print_info("Getting available scenes...")
-    status, data = ha_api_request("GET", "/api/states", token)
-    if status != 200:
-        print_fail(f"Failed to get states: {status}")
-        return None
-
-    scenes = [s for s in data if s["entity_id"].startswith("scene.")]
-    if not scenes:
-        print_fail("No scenes found in Home Assistant")
-        return None
-
-    scene_ids = [s["entity_id"] for s in scenes]
-    print_ok(f"Found {len(scenes)} scenes: {', '.join(scene_ids)}")
+    scene_ids = ["scene.light_on", "scene.light_off"]
+    print_info(f"Using scenes: {', '.join(scene_ids)}")
 
     # Initialize the config flow
     print_info("Starting config flow...")
@@ -462,6 +450,68 @@ def create_scene_toggle_config_entry(token: str) -> str | None:
     return None
 
 
+def create_unavailable_edge_case_config_entry(token: str) -> str | None:
+    """Create a config entry for the unavailable entity edge case test."""
+    print_step("Creating unavailable edge case config entry")
+
+    scene_ids = ["scene.off_lights", "scene.night"]
+    print_info(f"Using scenes: {', '.join(scene_ids)}")
+
+    status, data = ha_api_request(
+        "POST",
+        "/api/config/config_entries/flow",
+        token,
+        data={"handler": "scene_toggle"},
+    )
+
+    if status != 200:
+        print_fail(f"Failed to start config flow: {status} - {data}")
+        return None
+
+    flow_id = data.get("flow_id")
+    if not flow_id:
+        print_fail("No flow_id in response")
+        return None
+
+    print_ok(f"Config flow started: {flow_id}")
+
+    status, data = ha_api_request(
+        "POST",
+        f"/api/config/config_entries/flow/{flow_id}",
+        token,
+        data={
+            "name": "unavailable_edge_case",
+            "scenes": scene_ids,
+            "wrap_around": True,
+        },
+    )
+
+    if status != 200:
+        print_fail(f"Failed to submit config flow: {status} - {data}")
+        return None
+
+    if data.get("type") == "create_entry":
+        entry_id = data.get("result", {}).get("entry_id")
+        print_ok(f"Config entry created: {entry_id}")
+        return entry_id
+
+    print_fail(f"Unexpected flow result: {data}")
+    return None
+
+
+def set_entity_state(token: str, entity_id: str, state: str, attributes: dict | None = None) -> bool:
+    """Set an entity state directly via the states API."""
+    payload = {"state": state}
+    if attributes:
+        payload["attributes"] = attributes
+
+    status, _ = ha_api_request("POST", f"/api/states/{entity_id}", token, data=payload)
+    if status not in (200, 201):
+        print_fail(f"Failed to set state for {entity_id}: {status}")
+        return False
+    return True
+
+
 def wait_for_entity(token: str, entity_id: str, timeout: int = 30) -> bool:
     """Wait for an entity to appear in Home Assistant."""
     start = time.time()
@@ -488,9 +538,16 @@ def test_scene_detection(token: str) -> bool:
 
     sensor_entity = None
     for state in data:
-        if state["entity_id"].startswith("sensor.") and "current_scene" in state["entity_id"]:
-            sensor_entity = state["entity_id"]
-            break
+        entity_id = state["entity_id"]
+        if entity_id.startswith("sensor.") and "current_scene" in entity_id:
+            attrs = state.get("attributes", {})
+            all_scores = attrs.get("all_scores", {})
+            has_basic = "scene.light_on" in all_scores and "scene.light_off" in all_scores
+            has_color = "scene.color_test_off" in all_scores
+            has_edge = "scene.off_lights" in all_scores
+            if has_basic and not has_color and not has_edge:
+                sensor_entity = entity_id
+                break
 
     if not sensor_entity:
         print_fail("Scene toggle sensor not found")
@@ -965,6 +1022,82 @@ def test_scene_toggle_buttons(token: str) -> bool:
     return all(results)
 
 
+def test_unavailable_entity_edge_case(token: str) -> bool:
+    """Reproduce the Night vs Off lights misidentification with unavailable entities."""
+    print_step("Testing unavailable entity edge case (Night vs Off lights)")
+
+    status, data = ha_api_request("GET", "/api/states", token)
+    if status != 200:
+        print_fail(f"Failed to get states: {status}")
+        return False
+
+    sensor_entity = None
+    for state in data:
+        entity_id = state["entity_id"]
+        if entity_id.startswith("sensor.") and "current_scene" in entity_id:
+            attrs = state.get("attributes", {})
+            all_scores = attrs.get("all_scores", {})
+            has_edge = "scene.off_lights" in all_scores and "scene.night" in all_scores
+            has_other = "scene.light_on" in all_scores or "scene.color_test_off" in all_scores
+            if has_edge and not has_other:
+                sensor_entity = entity_id
+                break
+
+    if not sensor_entity:
+        print_fail("Edge case scene toggle sensor not found")
+        return False
+
+    print_ok(f"Found sensor: {sensor_entity}")
+
+    # Set current states to mirror the reported scenario.
+    ok = True
+    ok &= set_entity_state(
+        token,
+        "light.sphere_lamp",
+        "on",
+        {"brightness": 125, "rgb_color": [255, 53, 31]},
+    )
+    ok &= set_entity_state(
+        token,
+        "light.synthia_lamp",
+        "on",
+        {"brightness": 156, "color_temp": 500},
+    )
+    ok &= set_entity_state(token, "light.egg_lamp", "off")
+    ok &= set_entity_state(token, "light.gorinych_group", "off")
+    ok &= set_entity_state(token, "light.gorinych_1", "unavailable")
+    ok &= set_entity_state(token, "light.gorinych_2", "unavailable")
+    ok &= set_entity_state(token, "light.gorinych_3", "unavailable")
+
+    if not ok:
+        return False
+
+    # Wait for debounce (0.5s) + buffer
+    time.sleep(1.5)
+
+    status, data = ha_api_request("GET", f"/api/states/{sensor_entity}", token)
+    if status != 200:
+        print_fail(f"Failed to get sensor state: {status}")
+        return False
+
+    scene_entity_id = data.get("attributes", {}).get("scene_entity_id")
+    current_scene = data.get("state")
+    all_scores = data.get("attributes", {}).get("all_scores", {})
+
+    print_info(f"Detected: {current_scene} ({scene_entity_id})")
+    if all_scores:
+        print_info(
+            f"Distances: {json.dumps({k.split('.')[-1]: round(v, 4) for k, v in all_scores.items()}, indent=None)}"
+        )
+
+    if scene_entity_id == "scene.night":
+        print_ok("Night scene detected as current")
+        return True
+
+    print_fail(f"Expected scene.night, got {scene_entity_id}")
+    return False
+
+
 def run_tests(token: str) -> bool:
     """Run all integration tests."""
     results = []
@@ -995,6 +1128,14 @@ def run_tests(token: str) -> bool:
 
         # Test 7: Test scene toggle buttons (next/prev/wraparound)
         results.append(test_scene_toggle_buttons(token))
+
+    # Test 8: Create edge case config entry and test unavailable entities
+    edge_entry_id = create_unavailable_edge_case_config_entry(token)
+    results.append(edge_entry_id is not None)
+
+    if edge_entry_id:
+        time.sleep(2)
+        results.append(test_unavailable_entity_edge_case(token))
 
     return all(results)
 

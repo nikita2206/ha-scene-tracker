@@ -226,19 +226,23 @@ class SceneToggleCoordinator:
             return float("inf")
 
         total_distance = 0.0
+        counted_lights = 0
 
         for light_id, target in light_targets.items():
             state = self.hass.states.get(light_id)
             if not state:
-                # Light unavailable, add penalty
-                total_distance += 1.0
+                # Missing entity should not affect distance
+                continue
+            if state.state == "unavailable":
+                # Unavailable entities should have no effect
                 continue
 
             light_distance = self._calculate_light_distance(state, target)
             total_distance += light_distance
+            counted_lights += 1
 
         # Normalize by number of lights
-        return total_distance / len(light_targets)
+        return total_distance / counted_lights if counted_lights else float("inf")
 
     def _calculate_light_distance(self, current_state, target: LightTarget) -> float:
         """Calculate distance between current light state and target.
