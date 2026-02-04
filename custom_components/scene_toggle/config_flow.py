@@ -108,7 +108,7 @@ class SceneToggleConfigFlow(ConfigFlow, domain=DOMAIN):
                         SelectSelectorConfig(
                             options=available_scenes,
                             multiple=True,
-                            mode=SelectSelectorMode.LIST,
+                            mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
                     vol.Optional(
@@ -171,7 +171,7 @@ class SceneToggleOptionsFlow(OptionsFlow):
                         SelectSelectorConfig(
                             options=available_scenes,
                             multiple=True,
-                            mode=SelectSelectorMode.LIST,
+                            mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
                     vol.Optional(

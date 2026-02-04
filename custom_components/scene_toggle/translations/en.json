@@ -7,11 +7,12 @@
         "data": {
           "name": "Name",
           "scenes": "Scenes (in order)",
-          "wrap_around": "Wrap around (cycle from last to first)"
+          "wrap_around": "Wrap around"
         },
         "data_description": {
           "name": "A short name for this scene group (e.g., \"living_room\" or \"office\"). Only lowercase letters, numbers, and underscores are allowed. This will create the following entities: sensor.scene_toggle_[name]_current_scene, button.scene_toggle_[name]_next_scene, button.scene_toggle_[name]_previous_scene.",
-          "scenes": "Select scenes in the order you want to cycle through them."
+          "scenes": "Select scenes in the order you want to cycle through them.",
+          "wrap_around": "When enabled, pressing Next on the last scene jumps to the first scene, and pressing Previous on the first scene jumps to the last. When disabled, the buttons do nothing at the ends of the list."
         }
       }
     },
@@ -31,7 +32,10 @@
         "title": "Scene Toggle Options",
         "data": {
           "scenes": "Scenes (in order)",
-          "wrap_around": "Wrap around (cycle from last to first)"
+          "wrap_around": "Wrap around"
+        },
+        "data_description": {
+          "wrap_around": "When enabled, pressing Next on the last scene jumps to the first scene, and pressing Previous on the first scene jumps to the last. When disabled, the buttons do nothing at the ends of the list."
         }
       }
     }
