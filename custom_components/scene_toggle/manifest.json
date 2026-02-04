@@ -1,0 +1,9 @@
+{
+  "domain": "scene_toggle",
+  "name": "Scene Toggle",
+  "version": "0.1.0",
+  "documentation": "https://github.com/nikita2206/ha-scene-tracker",
+  "codeowners": ["@nikita2206"],
+  "requirements": [],
+  "iot_class": "local_push"
+}
