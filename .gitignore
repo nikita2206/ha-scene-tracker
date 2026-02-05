@@ -24,5 +24,4 @@ test_config/.HA_VERSION
 test_config/.ha_run.lock
 test_config/blueprints/
 test_config/custom_components/
-test_config/scenes.yaml
 test_config/known_devices.yaml
