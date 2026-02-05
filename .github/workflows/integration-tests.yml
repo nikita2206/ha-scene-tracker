@@ -25,7 +25,7 @@ jobs:
     
     - name: Run integration tests
       run: |
-        uv run --script scripts/integration_test.py --stop
+        uv run scripts/integration_test.py --stop
     
     - name: Cleanup containers
       if: always()
