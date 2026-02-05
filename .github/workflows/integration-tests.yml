@@ -25,8 +25,7 @@ jobs:
     
     - name: Run integration tests
       run: |
-        chmod +x scripts/integration_test.py
-        ./scripts/integration_test.py --stop
+        uv run --script scripts/integration_test.py --stop
     
     - name: Cleanup containers
       if: always()
