@@ -205,6 +205,12 @@ def reset_test_environment() -> None:
         print_info("Removing .storage directory...")
         shutil.rmtree(storage_dir)
 
+    # Create required files that are git-ignored but needed for HA to start
+    scenes_file = TEST_CONFIG_DIR / "scenes.yaml"
+    if not scenes_file.exists():
+        print_info("Creating empty scenes.yaml...")
+        scenes_file.write_text("[]\n")
+
     print_ok("Test environment reset")
 
 
