@@ -8,7 +8,7 @@ from typing import Any, Callable
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, EVENT_CALL_SERVICE, STATE_OFF, STATE_ON
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 
@@ -69,6 +69,9 @@ class SceneToggleCoordinator:
 
         # State change unsubscribe
         self._unsubscribe_state_change: Callable[[], None] | None = None
+        
+        # Service call event unsubscribe
+        self._unsubscribe_service_call: Callable[[], None] | None = None
 
     @property
     def current_scene(self) -> str | None:
@@ -109,6 +112,12 @@ class SceneToggleCoordinator:
             self.hass,
             list(self._tracked_lights),
             self._on_light_state_change,
+        )
+        
+        # Subscribe to service call events to detect scene activations
+        self._unsubscribe_service_call = self.hass.bus.async_listen(
+            EVENT_CALL_SERVICE,
+            self._on_service_call,
         )
 
         # Calculate initial state
@@ -184,11 +193,73 @@ class SceneToggleCoordinator:
         )
 
     @callback
+    def _on_service_call(self, event: Event) -> None:
+        """Handle service call event to detect scene activations."""
+        # Check if this is a scene.turn_on call
+        if event.data.get("domain") != "scene":
+            return
+        if event.data.get("service") not in ("turn_on", "apply"):
+            return
+        
+        # Get the entity_id(s) from service data
+        service_data = event.data.get("service_data", {})
+        entity_ids = service_data.get(ATTR_ENTITY_ID)
+        
+        if not entity_ids:
+            return
+        
+        # Normalize to list
+        if isinstance(entity_ids, str):
+            entity_ids = [entity_ids]
+        
+        # Check if any of our tracked scenes was activated
+        for entity_id in entity_ids:
+            if entity_id in self.scenes:
+                # Immediately update current scene without waiting for debounce
+                LOGGER.debug("Scene %s activated, updating immediately", entity_id)
+                
+                # Cancel any pending debounce
+                if self._debounce_cancel:
+                    self._debounce_cancel()
+                    self._debounce_cancel = None
+                
+                # Set the activated scene as current immediately
+                self._set_current_scene_immediately(entity_id)
+                self._notify_listeners()
+                
+                # Still schedule a debounced recalculation in case the scene
+                # activation doesn't match expectations (e.g., some lights unavailable)
+                self._debounce_cancel = async_call_later(
+                    self.hass,
+                    DEFAULT_DEBOUNCE_SECONDS,
+                    self._debounce_callback,
+                )
+                break
+
+    @callback
     def _debounce_callback(self, _now: Any) -> None:
         """Handle debounce timer completion."""
         self._debounce_cancel = None
         self._recalculate_current_scene()
         self._notify_listeners()
+    
+    def _set_current_scene_immediately(self, scene_id: str) -> None:
+        """Set current scene immediately without full recalculation.
+        
+        This is used when we know a scene was just activated and want to
+        reflect it immediately without waiting for debounce.
+        """
+        # Set the scene as current with a very low distance (0.0)
+        # since we know it was just activated
+        self._current_scene = scene_id
+        self._current_distance = 0.0
+        
+        # We don't update all_distances here since we're skipping full calculation
+        # The debounced callback will still run and update everything properly
+        LOGGER.debug(
+            "Immediately set current scene to: %s",
+            scene_id,
+        )
 
     def _recalculate_current_scene(self) -> None:
         """Recalculate which scene best matches current light states."""
@@ -468,5 +539,10 @@ class SceneToggleCoordinator:
         if self._unsubscribe_state_change:
             self._unsubscribe_state_change()
             self._unsubscribe_state_change = None
+        
+        # Unsubscribe from service calls
+        if self._unsubscribe_service_call:
+            self._unsubscribe_service_call()
+            self._unsubscribe_service_call = None
 
         self._listeners.clear()
