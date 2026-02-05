@@ -243,6 +243,7 @@ class SceneToggleCoordinator:
         self._recalculate_current_scene()
         self._notify_listeners()
     
+    @callback
     def _set_current_scene_immediately(self, scene_id: str) -> None:
         """Set current scene immediately without full recalculation.
         
