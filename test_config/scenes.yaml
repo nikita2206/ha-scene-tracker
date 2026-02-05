@@ -1,0 +1,72 @@
+# Test scenes
+- name: "Light On"
+  entities:
+    light.test_light:
+      state: "on"
+
+- name: "Light Off"
+  entities:
+    light.test_light:
+      state: "off"
+
+# Color mode test scenes using demo light (ceiling_lights)
+# Scene: off
+- name: "Color Test Off"
+  entities:
+    light.ceiling_lights:
+      state: "off"
+
+# Scene two: on, brightness=20 (out of 255 = ~8%), rgb=200,100,80
+- name: "Color Test Two"
+  entities:
+    light.ceiling_lights:
+      state: "on"
+      brightness: 20
+      rgb_color: [200, 100, 80]
+
+# Scene three: on, brightness=20, color_temp=2400K (417 mireds)
+- name: "Color Test Three"
+  entities:
+    light.ceiling_lights:
+      state: "on"
+      brightness: 20
+      color_temp: 417
+
+# Scene four: on, brightness=50, color_temp=2700K (370 mireds)
+- name: "Color Test Four"
+  entities:
+    light.ceiling_lights:
+      state: "on"
+      brightness: 50
+      color_temp: 370
+
+# Edge case scenes (Night vs Off lights)
+- name: "Off lights"
+  entities:
+    light.sphere_lamp:
+      state: "off"
+    light.synthia_lamp:
+      state: "off"
+    light.egg_lamp:
+      state: "off"
+    light.gorinych_group:
+      state: "off"
+
+- name: "Night"
+  entities:
+    light.sphere_lamp:
+      state: "on"
+      brightness: 125
+      rgb_color: [255, 53, 31]
+    light.synthia_lamp:
+      state: "on"
+      brightness: 156
+      color_temp: 500
+    light.egg_lamp:
+      state: "off"
+    light.gorinych_1:
+      state: "on"
+    light.gorinych_2:
+      state: "on"
+    light.gorinych_3:
+      state: "on"

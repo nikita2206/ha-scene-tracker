@@ -8,7 +8,11 @@ from typing import Any, Callable
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
+<<<<<<< HEAD
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, EVENT_CALL_SERVICE, STATE_OFF, STATE_ON
+=======
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF, STATE_ON
+>>>>>>> eafffa34270335585151ef173bc39da435b0ab1d
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 
@@ -69,9 +73,12 @@ class SceneToggleCoordinator:
 
         # State change unsubscribe
         self._unsubscribe_state_change: Callable[[], None] | None = None
+<<<<<<< HEAD
         
         # Service call event unsubscribe
         self._unsubscribe_service_call: Callable[[], None] | None = None
+=======
+>>>>>>> eafffa34270335585151ef173bc39da435b0ab1d
 
     @property
     def current_scene(self) -> str | None:
@@ -113,12 +120,15 @@ class SceneToggleCoordinator:
             list(self._tracked_lights),
             self._on_light_state_change,
         )
+<<<<<<< HEAD
         
         # Subscribe to service call events to detect scene activations
         self._unsubscribe_service_call = self.hass.bus.async_listen(
             EVENT_CALL_SERVICE,
             self._on_service_call,
         )
+=======
+>>>>>>> eafffa34270335585151ef173bc39da435b0ab1d
 
         # Calculate initial state
         self._recalculate_current_scene()
@@ -193,6 +203,7 @@ class SceneToggleCoordinator:
         )
 
     @callback
+<<<<<<< HEAD
     def _on_service_call(self, event: Event) -> None:
         """Handle service call event to detect scene activations."""
         # Check if this is a scene.turn_on call
@@ -237,11 +248,14 @@ class SceneToggleCoordinator:
                 break
 
     @callback
+=======
+>>>>>>> eafffa34270335585151ef173bc39da435b0ab1d
     def _debounce_callback(self, _now: Any) -> None:
         """Handle debounce timer completion."""
         self._debounce_cancel = None
         self._recalculate_current_scene()
         self._notify_listeners()
+<<<<<<< HEAD
     
     @callback
     def _set_current_scene_immediately(self, scene_id: str) -> None:
@@ -261,6 +275,8 @@ class SceneToggleCoordinator:
             "Immediately set current scene to: %s",
             scene_id,
         )
+=======
+>>>>>>> eafffa34270335585151ef173bc39da435b0ab1d
 
     def _recalculate_current_scene(self) -> None:
         """Recalculate which scene best matches current light states."""
@@ -540,10 +556,13 @@ class SceneToggleCoordinator:
         if self._unsubscribe_state_change:
             self._unsubscribe_state_change()
             self._unsubscribe_state_change = None
+<<<<<<< HEAD
         
         # Unsubscribe from service calls
         if self._unsubscribe_service_call:
             self._unsubscribe_service_call()
             self._unsubscribe_service_call = None
+=======
+>>>>>>> eafffa34270335585151ef173bc39da435b0ab1d
 
         self._listeners.clear()
