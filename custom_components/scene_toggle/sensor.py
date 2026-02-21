@@ -50,8 +50,8 @@ class CurrentSceneSensor(SensorEntity):
 
     @property
     def native_value(self) -> str | None:
-        """Return the current scene name."""
-        return self.coordinator.current_scene_name
+        """Return the current scene entity ID."""
+        return self.coordinator.current_scene
 
     @property
     def extra_state_attributes(self) -> dict:
