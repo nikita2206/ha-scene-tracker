@@ -59,6 +59,34 @@ For each Scene Toggle instance (where `{name}` is the name you provided during s
 | `button.scene_toggle_{name}_next_scene` | Activates the next scene in the list |
 | `button.scene_toggle_{name}_previous_scene` | Activates the previous scene in the list |
 
+### Sensor Attributes
+
+The `sensor.scene_toggle_{name}_current_scene` entity exposes these additional attributes:
+
+| Attribute | Description |
+|-----------|-------------|
+| `scene_entity_id` | The entity ID of the current best-matching scene (e.g. `scene.evening_lights`) |
+| `distance_score` | How closely the current light states match the detected scene (lower = better match) |
+| `all_scores` | Distance scores for every tracked scene |
+
+### Using scene_entity_id in Automations
+
+The sensor's state is the human-readable scene name. To reference the scene entity ID (e.g. to call `scene.turn_on`) use the `scene_entity_id` attribute:
+
+```yaml
+# Trigger an action when a specific scene becomes active
+trigger:
+  - platform: template
+    value_template: >
+      {{ state_attr('sensor.scene_toggle_living_room_current_scene', 'scene_entity_id') == 'scene.evening_lights' }}
+
+# Use the current scene entity ID in a service call
+action:
+  - service: scene.turn_on
+    data:
+      entity_id: "{{ state_attr('sensor.scene_toggle_living_room_current_scene', 'scene_entity_id') }}"
+```
+
 ## Configuration Options
 
 - **Name** - A unique name for this scene group (lowercase letters, numbers, and underscores only)
