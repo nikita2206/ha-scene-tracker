@@ -1,7 +1,7 @@
 {
   "domain": "scene_toggle",
   "name": "Scene Toggle",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "documentation": "https://github.com/nikita2206/ha-scene-tracker",
   "codeowners": ["@nikita2206"],
   "requirements": [],

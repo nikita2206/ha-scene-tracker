@@ -6,7 +6,7 @@ import math
 from dataclasses import dataclass
 from typing import Any, Callable
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_RGB_COLOR, DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, EVENT_CALL_SERVICE, STATE_OFF, STATE_ON
 from homeassistant.core import Event, HomeAssistant, callback
@@ -26,6 +26,21 @@ from .const import (
     WEIGHT_BRIGHTNESS,
     WEIGHT_COLOR,
 )
+
+# Recent Home Assistant versions removed the mireds-based ATTR_COLOR_TEMP constant
+# and report color temperature in Kelvin. Use string keys so the integration works
+# on both old and new versions.
+ATTR_COLOR_TEMP = "color_temp"
+ATTR_COLOR_TEMP_KELVIN = "color_temp_kelvin"
+
+
+def _get_mireds(attributes: Any) -> int | None:
+    """Return color temperature in mireds from state or scene attributes."""
+    kelvin = attributes.get(ATTR_COLOR_TEMP_KELVIN)
+    if kelvin:
+        return round(1_000_000 / kelvin)
+    return attributes.get(ATTR_COLOR_TEMP)
+
 
 
 @dataclass
@@ -159,7 +174,7 @@ class SceneToggleCoordinator:
                 light_target = LightTarget(
                     state=target.state,
                     brightness=target.attributes.get(ATTR_BRIGHTNESS),
-                    color_temp=target.attributes.get(ATTR_COLOR_TEMP),
+                    color_temp=_get_mireds(target.attributes),
                     rgb_color=target.attributes.get(ATTR_RGB_COLOR),
                 )
                 light_targets[entity_id] = light_target
@@ -332,7 +347,7 @@ class SceneToggleCoordinator:
         # Get current values (off = brightness 0)
         if current_is_on:
             current_brightness = current_state.attributes.get(ATTR_BRIGHTNESS, 255)
-            current_color_temp = current_state.attributes.get(ATTR_COLOR_TEMP)
+            current_color_temp = _get_mireds(current_state.attributes)
             current_rgb = current_state.attributes.get(ATTR_RGB_COLOR)
         else:
             current_brightness = 0
